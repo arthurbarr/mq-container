@@ -6,9 +6,9 @@ If you build this image with MQ Advanced for Developers, then an optional set of
 
 The MQ Developer Defaults supports some customization options, these are all controlled using environment variables:
 
-* **MQ_DEV** - Set this to `false` to stop the default objects being created.
-* **MQ_ADMIN_PASSWORD** - Changes the password of the `admin` user. Must be at least 8 characters long.
-* **MQ_APP_PASSWORD** - Changes the password of the app user. If set, this will cause the `DEV.APP.SVRCONN` channel to become secured and only allow connections that supply a valid userid and password. Must be at least 8 characters long.
+* **MQ_DEV** - Set this to `false` to stop the default objects being created.  Default is `true`.
+* **MQ_ADMIN_PASSWORD** - Changes the password of the `admin` user. Must be at least 8 characters long.  Default is `passw0rd`.
+* **MQ_APP_PASSWORD** - Changes the password of the app user. If set, this will cause the `DEV.APP.SVRCONN` channel to become secured and only allow connections that supply a valid userid and password. Must be at least 8 characters long.  Default is blank (no password required) for MQ clients, and `passw0rd` for HTTP clients.
 * **MQ_TLS_KEYSTORE** - Allows you to supply the location of a PKCS#12 keystore containing a single certificate which you want to use in both the web console and the queue manager. Requires `MQ_TLS_PASSPHRASE`. When enabled the channels created will be secured using the `TLS_RSA_WITH_AES_128_CBC_SHA256` CipherSpec. *Note*: you will need to make the keystore available inside your container, this can be done by mounting a volume to your container.
 * **MQ_TLS_PASSPHRASE** - Passphrase for the keystore referenced in `MQ_TLS_KEYSTORE`.
 
@@ -17,7 +17,7 @@ The MQ Developer Defaults supports some customization options, these are all con
 The following users are created:
 
 * User **admin** for administration (in the `mqm` group).  Default password is **passw0rd**.
-* User **app** for messaging (in a group called `mqclient`).  No password by default.
+* User **app** for messaging (in a group called `mqclient`).  No password by default for MQ client applications, or `passw0rd` for REST messaging clients.
 
 Users in `mqclient` group have been given access connect to all queues and topics starting with `DEV.**` and have `put`, `get`, `pub`, `sub`, `browse` and `inq` permissions.
 
@@ -53,3 +53,7 @@ If you choose to accept the security warning, you will be presented with the log
 If you wish to change the password for the admin user, this can be done using the `MQ_ADMIN_PASSWORD` environment variable. If you supply a PKCS#12 keystore using the `MQ_TLS_KEYSTORE` environment variable, then the web console will be configured to use the certificate inside the keystore for HTTPS operations.
 
 If you do not wish the web console to run, you can disable it by setting the environment variable `MQ_DISABLE_WEB_CONSOLE` to `true`.
+
+## REST messaging
+
+REST messaging is configured by default for the "app" user.  See [Messaging using the REST API](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_9.0.0/com.ibm.mq.dev.doc/q130940_.html) for more details.
