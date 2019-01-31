@@ -19,7 +19,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"os/user"
@@ -68,26 +67,6 @@ func startWebServer() error {
 	}
 	log.Println("Started web server")
 	return nil
-}
-
-// CopyFile copies the specified file
-func CopyFile(src, dest string) error {
-	log.Debugf("Copying file %v to %v", src, dest)
-	in, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-
-	out, err := os.OpenFile(dest, os.O_CREATE|os.O_WRONLY, 0770)
-	defer out.Close()
-
-	_, err = io.Copy(out, in)
-	if err != nil {
-		return err
-	}
-	err = out.Close()
-	return err
 }
 
 func configureWebServer() error {

@@ -64,21 +64,14 @@ buildah run $ctr_mq -- /opt/mqm/bin/setmqinst -p /opt/mqm -i
 mkdir -p $mnt_mq/run/runmqserver
 chown ${mqm_uid}:${mqm_gid} $mnt_mq/run/runmqserver
 
-# Remove the directory structure under /var/mqm which was created by the installer
-rm -rf $mnt_mq/var/mqm
-
 # Create the mount point for volumes, ensuring MQ has permissions to all directories
 mkdir -p $mnt_mq/mnt/mqm
 install --directory --mode 0775 --owner ${mqm_uid} --group root $mnt_mq/mnt
 install --directory --mode 0775 --owner ${mqm_uid} --group root $mnt_mq/mnt/mqm
-install --directory --mode 0775 --owner ${mqm_uid} --group root $mnt_mq/mnt/mqm/data
 
 # Create the directory for MQ configuration files
 mkdir -p /etc/mqm
 install --directory --mode 0775 --owner ${mqm_uid} --group root $mnt_mq/etc/mqm
-
-# Create a symlink for /var/mqm -> /mnt/mqm/data
-buildah run --user root $ctr_mq -- ln -s /mnt/mqm/data /var/mqm
 
 # Optional: Set these values for the IBM Cloud Vulnerability Report
 sed -i 's/PASS_MAX_DAYS\t99999/PASS_MAX_DAYS\t90/' $mnt_mq/etc/login.defs

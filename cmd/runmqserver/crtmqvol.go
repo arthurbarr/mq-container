@@ -1,5 +1,5 @@
 /*
-© Copyright IBM Corporation 2017, 2018
+© Copyright IBM Corporation 2017, 2019
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,21 +16,20 @@ limitations under the License.
 package main
 
 import (
+	"io"
 	"os"
-	"path/filepath"
 	"runtime"
 	"syscall"
 
 	"github.com/ibm-messaging/mq-container/internal/command"
 )
 
-func createVolume(path string) error {
-	dataPath := filepath.Join(path, "data")
-	fi, err := os.Stat(dataPath)
+func createMQDirectory(path string) error {
+	fi, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// #nosec G301
-			err = os.MkdirAll(dataPath, 0755)
+			err = os.MkdirAll(path, 0755)
 			if err != nil {
 				return err
 			}
@@ -38,7 +37,7 @@ func createVolume(path string) error {
 			return err
 		}
 	}
-	fi, err = os.Stat(dataPath)
+	fi, err = os.Stat(path)
 	if err != nil {
 		return err
 	}
@@ -51,12 +50,32 @@ func createVolume(path string) error {
 		}
 		log.Debugf("mqm user is %v (%v)", mqmUID, mqmGID)
 		if int(stat.Uid) != mqmUID || int(stat.Gid) != mqmGID {
-			err = os.Chown(dataPath, mqmUID, mqmGID)
+			err = os.Chown(path, mqmUID, mqmGID)
 			if err != nil {
-				log.Printf("Error: Unable to change ownership of %v", dataPath)
+				log.Printf("Error: Unable to change ownership of %v", path)
 				return err
 			}
 		}
 	}
 	return nil
+}
+
+// CopyFile copies the specified file
+func CopyFile(src, dest string) error {
+	log.Debugf("Copying file %v to %v", src, dest)
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.OpenFile(dest, os.O_CREATE|os.O_WRONLY, 0770)
+	defer out.Close()
+
+	_, err = io.Copy(out, in)
+	if err != nil {
+		return err
+	}
+	err = out.Close()
+	return err
 }

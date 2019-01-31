@@ -22,6 +22,7 @@ import (
 	"errors"
 	"flag"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/ibm-messaging/mq-container/internal/metrics"
@@ -93,16 +94,57 @@ func doMain() error {
 		return err
 	}
 
-	err = createVolume("/mnt/mqm")
+	dataRoot := filepath.Join("/mnt/mqm", name)
+	emptyVolume := false
+	_, err = os.Stat(dataRoot)
+	if err != nil {
+		if os.IsNotExist(err) {
+			emptyVolume = true
+		} else {
+			logTermination(err)
+			return err
+		}
+	}
+	err = createMQDirectory(dataRoot)
 	if err != nil {
 		logTermination(err)
 		return err
 	}
+	logDir := filepath.Join(dataRoot, "log")
+	dataDir := filepath.Join(dataRoot, "data")
+	err = createMQDirectory(logDir)
+	if err != nil {
+		logTermination(err)
+		return err
+	}
+	err = createMQDirectory(dataDir)
+	if err != nil {
+		logTermination(err)
+		return err
+	}
+
 	err = createDirStructure()
 	if err != nil {
 		logTermination(err)
 		return err
 	}
+
+	mqsIni := filepath.Join(dataRoot, "mqs.ini")
+	if emptyVolume {
+		// mqs.ini will be default, as created by crtmqdir
+		err = CopyFile("/var/mqm/mqs.ini", mqsIni)
+		if err != nil {
+			logTermination(err)
+			return err
+		}
+	}
+	// Remove the incorrect mqs.ini
+	err = os.Remove("/var/mqm/mqs.ini")
+	if err != nil {
+		logTermination(err)
+		return err
+	}
+	os.Setenv("AMQ_MQS_INI_LOCATION", mqsIni)
 
 	// If init flag is set, exit now
 	if *initFlag {
@@ -118,7 +160,7 @@ func doMain() error {
 		return err
 	}
 
-	newQM, err := createQueueManager(name)
+	newQM, err := createQueueManager(name, logDir, dataDir)
 	if err != nil {
 		logTermination(err)
 		return err

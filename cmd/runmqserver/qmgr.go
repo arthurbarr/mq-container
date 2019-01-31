@@ -39,9 +39,9 @@ func createDirStructure() error {
 
 // createQueueManager creates a queue manager, if it doesn't already exist.
 // It returns true if one was created, or false if one already existed
-func createQueueManager(name string) (bool, error) {
+func createQueueManager(name string, logDir string, dataDir string) (bool, error) {
 	log.Printf("Creating queue manager %v", name)
-	out, rc, err := command.Run("crtmqm", "-q", "-p", "1414", name)
+	out, rc, err := command.Run("crtmqm", "-q", "-p", "1414", "-ld", logDir, "-md", dataDir, name)
 	if err != nil {
 		// 8=Queue manager exists, which is fine
 		if rc == 8 {
